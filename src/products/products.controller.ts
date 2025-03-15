@@ -4,7 +4,6 @@ import {
   Delete,
   Get,
   Param,
-  Patch,
   Post,
   Put,
 } from '@nestjs/common';
@@ -33,14 +32,6 @@ export class ProductsController {
   @Put(':id')
   updateAProduct(@Param('id') id: string, @Body() productsDto: ProductsDto) {
     return this.productsService.editAProduct(id, productsDto);
-  }
-
-  @Patch(':id')
-  updateAProductPartially(
-    @Param('id') id: string,
-    @Body() productsDto: Partial<ProductsDto>,
-  ) {
-    return this.productsService.editAProductPartially(id, productsDto);
   }
 
   @Delete(':id')

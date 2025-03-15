@@ -1,58 +1,38 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ProductsDto } from './dto/products.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { productDocument, productModel } from './schema/products.schema';
+import { Model } from 'mongoose';
 
 @Injectable()
 export class ProductsService {
-  private products: ProductsDto[] = [];
+  constructor(
+    @InjectModel(productModel.name)
+    private productModel: Model<productDocument>,
+  ) {}
 
-  insertProduct(product: ProductsDto) {
-    this.products.push(product);
-    return this.products;
+  async insertProduct(productsDto: ProductsDto) {
+    const createdProduct = new this.productModel(productsDto);
+    return createdProduct.save();
   }
 
-  returnAllProducts() {
-    return this.products;
+  async returnAllProducts() {
+    return this.productModel.find().exec();
   }
 
-  returnAProduct(productId: string) {
-    const product = this.products.find((p) => p.id === productId);
-    return product ?? {};
+  async returnAProduct(productId: string) {
+    return this.productModel.findById(productId).exec();
   }
 
-  editAProduct(productId: string, editedProduct: ProductsDto) {
-    const editedProductIndex = this.products.findIndex(
-      (p) => p.id === productId,
-    );
-    if (editedProductIndex >= 0) {
-      this.products[editedProductIndex] = editedProduct;
-      return this.products;
-    }
-    throw new HttpException(
-      `Product with id - ${productId} not found`,
-      HttpStatus.NOT_FOUND,
-    );
+  async editAProduct(productId: string, editedProduct: ProductsDto) {
+    return this.productModel
+      .findByIdAndUpdate(productId, editedProduct, {
+        new: true,
+      })
+      .exec();
   }
 
-  editAProductPartially(
-    productId: string,
-    editedProduct: Partial<ProductsDto>,
-  ) {
-    const editedProductIndex = this.products.findIndex(
-      (p) => p.id === productId,
-    );
-    if (editedProductIndex === -1) {
-      throw new HttpException(
-        `Product to be edited (#${productId}) not found!`,
-        HttpStatus.NOT_FOUND,
-      );
-    }
-    const product = this.products[editedProductIndex];
-    this.products[editedProductIndex] = { ...product, ...editedProduct };
-    return this.products;
-  }
-
-  removeAProduct(productId: string) {
-    this.products = this.products.filter((p) => p.id !== productId);
-    return this.products;
+  async removeAProduct(productId: string) {
+    return this.productModel.findByIdAndDelete(productId).exec();
   }
 }
